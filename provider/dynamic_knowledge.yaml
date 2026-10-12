@@ -1,0 +1,43 @@
+identity:
+  author: xiaozie-xy
+  name: dynamic_knowledge
+  label:
+    en_US: Dynamic Knowledge Retrieval
+    zh_Hans: 动态知识库检索
+  description:
+    en_US: Search a Dify knowledge base selected by dataset_id at runtime.
+    zh_Hans: 按运行时传入的知识库 ID 检索 Dify 知识库。
+  icon: icon.svg
+  tags:
+    - search
+credentials_for_provider:
+  api_base:
+    type: text-input
+    required: true
+    label:
+      en_US: API Base URL
+      zh_Hans: API 地址
+    placeholder:
+      en_US: https://api.dify.ai/v1
+      zh_Hans: https://api.dify.ai/v1
+    help:
+      en_US: "Knowledge service API base URL, including /v1. From the plugin daemon on a self-hosted Docker Compose stack, use http://api:5001/v1."
+      zh_Hans: "知识库服务 API 地址，需包含 /v1。自部署 Docker Compose 中，插件进程通常应填 http://api:5001/v1。"
+  dataset_api_key:
+    type: secret-input
+    required: true
+    label:
+      en_US: Knowledge Base API Key
+      zh_Hans: 知识库 API Key
+    placeholder:
+      en_US: dataset-xxxxxxxx
+      zh_Hans: dataset-xxxxxxxx
+    help:
+      en_US: "Create this on the knowledge-base API page. To search datasets chosen at runtime, scope the key to all knowledge bases."
+      zh_Hans: "在知识库 API 页面创建。运行时要检索不同知识库时，密钥范围请选「全部知识库」。"
+    url: https://docs.dify.ai/zh/api-reference/guides/knowledge
+tools:
+  - tools/dynamic_knowledge_retrieval.yaml
+extra:
+  python:
+    source: provider/dynamic_knowledge.py

@@ -1,0 +1,32 @@
+version: 0.0.1
+type: plugin
+author: xiaozie-xy
+name: dynamic_knowledge
+repo: https://github.com/xiaozie-xy/dify_plugin_dynamic_knowledge
+contact: xiaozie-xy@foxmail.com
+label:
+  en_US: Dynamic Knowledge Retrieval
+  zh_Hans: 动态知识库检索
+description:
+  en_US: Retrieve chunks from a knowledge base chosen at runtime by dataset_id. Use it in place of the built-in knowledge retrieval node when each run must search a different dataset.
+  zh_Hans: 按运行时传入的 dataset_id 检索知识库分段。每次运行需要检索不同知识库时，用它代替内置知识检索节点。
+icon: icon.svg
+created_at: "2026-10-10T07:10:00Z"
+tags:
+  - search
+resource:
+  memory: 268435456
+plugins:
+  tools:
+    - provider/dynamic_knowledge.yaml
+meta:
+  version: 0.0.1
+  minimum_dify_version: 1.17.1
+  arch:
+    - amd64
+    - arm64
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main
+privacy: ./PRIVACY.md

@@ -1,0 +1,280 @@
+identity:
+  name: dynamic_knowledge_retrieval
+  author: xiaozie-xy
+  label:
+    en_US: Dynamic Knowledge Retrieval
+    zh_Hans: 动态知识库检索
+description:
+  human:
+    en_US: Retrieve chunks from the knowledge base identified by dataset_id. Bind dataset_id to a workflow variable so each run searches the intended dataset.
+    zh_Hans: 按 dataset_id 检索指定知识库。把 dataset_id 绑到工作流变量后，每次运行只检索该变量指向的知识库。
+  llm: Retrieve text chunks from a Dify knowledge base. The dataset_id argument selects which knowledge base to search, and query is the search text.
+parameters:
+  - name: dataset_id
+    type: string
+    required: true
+    form: llm
+    label:
+      en_US: Dataset ID
+      zh_Hans: 知识库 ID
+    human_description:
+      en_US: UUID of the knowledge base to search. Pass the dataset ID that matches the current task.
+      zh_Hans: 要检索的知识库 UUID。可按本轮任务的实际需要，动态传入对应的知识库 ID。
+    llm_description: UUID of the Dify knowledge base to search. Pass the dataset ID that matches the current task. Do not guess this value.
+  - name: query
+    type: string
+    required: true
+    form: llm
+    label:
+      en_US: Query
+      zh_Hans: 查询文本
+    human_description:
+      en_US: Search text, up to 250 characters. Put only what to look up here. Leave formatting or extraction instructions to the downstream LLM node.
+      zh_Hans: 检索文本，最长 250 个字符。这里只写要查找的内容，整理或提取要求写在后续 LLM 节点。
+    llm_description: Short search query, maximum 250 characters.
+  - name: search_method
+    type: select
+    required: false
+    default: follow_dataset
+    form: form
+    label:
+      en_US: Search method
+      zh_Hans: 检索方式
+    human_description:
+      en_US: Follow the dataset setting, or override it for this call.
+      zh_Hans: 默认沿用该知识库自己的检索设置，也可以在本次调用中覆盖。
+    options:
+      - value: follow_dataset
+        label:
+          en_US: Follow dataset
+          zh_Hans: 沿用知识库设置
+      - value: semantic_search
+        label:
+          en_US: Semantic search
+          zh_Hans: 向量检索
+      - value: full_text_search
+        label:
+          en_US: Full-text search
+          zh_Hans: 全文检索
+      - value: keyword_search
+        label:
+          en_US: Keyword search
+          zh_Hans: 关键词检索
+      - value: hybrid_search
+        label:
+          en_US: Hybrid search
+          zh_Hans: 混合检索
+  - name: top_k
+    type: number
+    required: false
+    default: 4
+    min: 1
+    max: 50
+    form: form
+    label:
+      en_US: Top K
+      zh_Hans: 返回条数
+    human_description:
+      en_US: Maximum number of chunks to return.
+      zh_Hans: 最多返回的分段数。
+  - name: score_threshold_enabled
+    type: boolean
+    required: false
+    default: false
+    form: form
+    label:
+      en_US: Enable score threshold
+      zh_Hans: 启用分数阈值
+    human_description:
+      en_US: Off keeps the dataset score setting. On replaces it with the threshold below.
+      zh_Hans: 关闭时沿用知识库自己的分数阈值。打开后使用下面的阈值覆盖。
+  - name: score_threshold
+    type: number
+    required: false
+    min: 0
+    max: 1
+    form: form
+    label:
+      en_US: Score threshold
+      zh_Hans: 分数阈值
+    human_description:
+      en_US: Used only when the score threshold is enabled.
+      zh_Hans: 仅在启用分数阈值时生效。
+  - name: reranking_enable
+    type: boolean
+    required: false
+    default: false
+    form: form
+    label:
+      en_US: Enable rerank
+      zh_Hans: 启用 Rerank
+    human_description:
+      en_US: Off keeps the dataset rerank setting. On replaces it with the model selected below.
+      zh_Hans: 关闭时沿用知识库自己的 Rerank 设置。打开后使用下面选择的模型覆盖。
+  - name: reranking_model
+    type: model-selector
+    scope: rerank
+    required: false
+    form: form
+    label:
+      en_US: Rerank model
+      zh_Hans: Rerank 模型
+    human_description:
+      en_US: Pick a rerank model configured in this workspace. Used only when rerank is enabled.
+      zh_Hans: 从当前工作区已配置的 Rerank 模型中选择。仅在启用 Rerank 时生效。
+  - name: attachment_ids
+    type: string
+    required: false
+    form: llm
+    label:
+      en_US: Attachment IDs
+      zh_Hans: 附件 ID
+    human_description:
+      en_US: 'Optional attachment IDs, separated by commas. Example: 3f1c2a90-xxx-xxx,8c0d1e2f-xxx-xxx. Leave empty for text-only search.'
+      zh_Hans: 可选。附件 ID，多个用逗号分隔。示例：3f1c2a90-xxx-xxx,8c0d1e2f-xxx-xxx。留空则只按文本检索。
+    llm_description: 'Optional comma-separated attachment IDs. Example: 3f1c2a90-7b6e-4d18-9c0a-1e2f3a4b5c6d,8c0d1e2f-3a4b-45c6-8d7e-9f0a1b2c3d4e. Leave empty when no attachments are needed.'
+  - name: hybrid_weight_type
+    type: select
+    required: false
+    default: follow_dataset
+    form: form
+    label:
+      en_US: Hybrid weights
+      zh_Hans: 混合检索权重
+    human_description:
+      en_US: Used for hybrid search. Follow keeps the dataset weights. Semantic first, keyword first, or custom replaces them. Embedding model names come from the dataset.
+      zh_Hans: 用于混合检索。沿用时保留知识库已保存的权重。语义优先、关键词优先或自定义会覆盖它。嵌入模型名称取自该知识库。
+    options:
+      - value: follow_dataset
+        label:
+          en_US: Follow dataset
+          zh_Hans: 沿用知识库设置
+      - value: semantic_first
+        label:
+          en_US: Semantic first
+          zh_Hans: 语义优先
+      - value: keyword_first
+        label:
+          en_US: Keyword first
+          zh_Hans: 关键词优先
+      - value: customized
+        label:
+          en_US: Custom
+          zh_Hans: 自定义
+  - name: vector_weight
+    type: number
+    required: false
+    default: 0.7
+    min: 0
+    max: 1
+    form: form
+    label:
+      en_US: Semantic weight
+      zh_Hans: 语义权重
+    human_description:
+      en_US: Used only when hybrid weights are custom. Keyword weight is 1 minus this value.
+      zh_Hans: 仅在混合检索权重为自定义时生效。关键词权重等于 1 减去该值。
+  - name: metadata_logical_operator
+    type: select
+    required: false
+    default: and
+    form: form
+    label:
+      en_US: Metadata logic
+      zh_Hans: 元数据组合
+    human_description:
+      en_US: How to combine metadata conditions. Default is and, so every condition must match.
+      zh_Hans: 多条元数据条件的组合方式。默认 and，表示必须同时满足。
+    options:
+      - value: and
+        label:
+          en_US: and
+          zh_Hans: 并且
+      - value: or
+        label:
+          en_US: or
+          zh_Hans: 或者
+  - name: metadata_conditions
+    type: string
+    required: false
+    form: llm
+    label:
+      en_US: Metadata conditions
+      zh_Hans: 元数据条件
+    human_description:
+      en_US: 'Optional JSON string. Example: [{"name":"year","comparison_operator":"is","value":"2024"}]. See the README for every comparison operator. Leave empty to skip metadata filtering.'
+      zh_Hans: 可选的 JSON 字符串。示例：[{"name":"year","comparison_operator":"is","value":"2024"}]。全部比较方式见 README。留空则不做元数据过滤。
+    llm_description: 'Optional JSON array of metadata conditions. Each item needs name, comparison_operator, and value. comparison_operator must be one of: contains, not contains, start with, end with, is, is not, empty, not empty, in, not in, =, ≠, >, <, ≥, ≤, before, after. Examples: [{"name":"year","comparison_operator":"is","value":"2024"},{"name":"title","comparison_operator":"contains","value":"年报"},{"name":"score","comparison_operator":"≥","value":"80"},{"name":"category","comparison_operator":"in","value":"report,notice"}]. Omit value for empty and not empty. For in and not in, value is a comma-separated list. Leave empty when no metadata filter is needed.'
+output_schema:
+  type: object
+  properties:
+    result:
+      type: array
+      description: Retrieved chunks. Each item has content, title, score, metadata, document_id, segment_id, dataset_id, dataset_name, position, segment_position, segment_word_count, segment_hit_count, child_chunks, files, and summary. files and summary are null when the segment has none.
+      items:
+        type: object
+        properties:
+          content:
+            type: string
+          title:
+            type: string
+          score:
+            type: number
+          metadata:
+            type: object
+          document_id:
+            type: string
+          segment_id:
+            type: string
+          dataset_id:
+            type: string
+          dataset_name:
+            type: string
+          position:
+            type: number
+          segment_position:
+            type: number
+          segment_word_count:
+            type: number
+          segment_hit_count:
+            type: number
+          child_chunks:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                content:
+                  type: string
+                position:
+                  type: number
+                score:
+                  type: number
+          files:
+            type: array
+            description: Attached files. Null when the segment has none.
+            items:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                extension:
+                  type: string
+                mime_type:
+                  type: string
+                size:
+                  type: number
+                source_url:
+                  type: string
+          summary:
+            type: string
+            description: Summary text from summary indexing. Null when there is none.
+    context:
+      type: string
+      description: Retrieved chunk text joined for an LLM prompt.
+extra:
+  python:
+    source: tools/dynamic_knowledge_retrieval.py
